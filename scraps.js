@@ -7,7 +7,10 @@ const Boom = require('boom');
 const server = new Hapi.Server();
 server.connection({ 
     host: 'localhost', 
-    port: 8000
+    port: 8000,
+    routes: {
+        cors: true,
+    },
 });
 
 let contents = {};
@@ -25,6 +28,60 @@ server.route({
         }
 
         contents[category].push(body);
+        body.id = contents[category].findIndex(x => x === body);
+
+        return reply(body);
+    }
+});
+
+server.route({
+    method: 'POST',
+    path: '/api/{category}/{index}', 
+    handler: function (request, reply) {
+        let body = request.payload;
+        let category = request.params.category;
+        let index = request.params.index;
+
+        if (!contents.hasOwnProperty(category)) return reply(Boom.notFound('Unknown entity type'));
+        if (index >= contents[category].length) return reply(Boom.notFound('Entity doesn\'t exist'));
+
+        contents[category][index] = body;
+        body.id = contents[category].findIndex(x => x === body);
+
+        return reply(body);
+    }
+});
+
+server.route({
+    method: 'PUT',
+    path: '/api/{category}', 
+    handler: function (request, reply) {
+        let body = request.payload;
+        let category = request.params.category;
+
+        if (!contents.hasOwnProperty(category)) {
+            contents[category] = [];
+        }
+
+        contents[category].push(body);
+        body.id = contents[category].findIndex(x => x === body);
+
+        return reply(body);
+    }
+});
+
+server.route({
+    method: 'PUT',
+    path: '/api/{category}/{index}', 
+    handler: function (request, reply) {
+        let body = request.payload;
+        let category = request.params.category;
+        let index = request.params.index;
+
+        if (!contents.hasOwnProperty(category)) return reply(Boom.notFound('Unknown entity type'));
+        if (index >= contents[category].length) return reply(Boom.notFound('Entity doesn\'t exist'));
+
+        contents[category][index] = body;
         body.id = contents[category].findIndex(x => x === body);
 
         return reply(body);
